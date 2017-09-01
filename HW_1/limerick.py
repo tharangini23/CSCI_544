@@ -54,8 +54,12 @@ class LimerickDetector:
         Initializes the object to have a pronunciation dictionary available
         """
         self._pronunciations = nltk.corpus.cmudict.dict()
+        self.digits = [str(i) for i in range(0,10)]
 
-
+    def isDigit(self, char):
+        if char in self.digits:
+            return 1
+        return 0
     def num_syllables(self, word):
         """
         Returns the number of syllables in a word.  If there's more than one
@@ -64,6 +68,17 @@ class LimerickDetector:
         """
 
         # TODO: provide an implementation!
+        if word in self._pronunciations:
+            pronunciations = self._pronunciations[word]
+            syllableCountList = []
+            for pronunciation in pronunciations :
+                numberOfSyllables = 0
+                for phones in pronunciation:
+                    if self.isDigit(phones[-1]):
+                        numberOfSyllables += 1
+                syllableCountList.append(numberOfSyllables)
+
+            return min(syllableCountList)
 
         return 1
 
