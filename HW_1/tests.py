@@ -6,6 +6,12 @@ class TestSequenceFunctions(unittest.TestCase):
     def setUp(self):
         self.ld = LimerickDetector()
 
+    def test_getIndex(self):
+        print(self.ld.getIndexOfFirstConsonant("dog"))
+
+    def test_rhyme2(self):
+        print(self.ld.rhymes("die", "aye"))
+
     def test_rhyme(self):
         s = []
         try: self.assertEqual(self.ld.rhymes("dog", "bog"), True)
@@ -70,6 +76,17 @@ class TestSequenceFunctions(unittest.TestCase):
         print '\nNumber of failed syllables tests:', str(len(s))
         if len(s)!=0: print 'Failed syllables tests:', ','.join([str(x) for x in s])
 
+    def test_examples_limerick(self):
+
+        a = """
+a woman whose friends called a prude
+on a lark when bathing all nude
+saw a man come can't along.
+and unless we are wrong
+you expected this line to be lewd
+        """
+        self.ld.is_limerick(a)
+
     def test_examples(self):
 
         a = """
@@ -117,6 +134,7 @@ And burned her entire
 Front page, sporting section and all."""
 
         h = "dog\ndog\ndog\ndog\ndog"
+        self.ld.is_limerick(a)
 
         s = []
 

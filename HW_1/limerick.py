@@ -55,7 +55,11 @@ class LimerickDetector:
         """
         self._pronunciations = nltk.corpus.cmudict.dict()
         self.digits = [str(i) for i in range(0,10)]
-
+    #return 1 if consonant
+    def isConsonant(self, char):
+        if char in self.digits:
+            return 0
+        return 1
     def isDigit(self, char):
         if char in self.digits:
             return 1
@@ -81,16 +85,75 @@ class LimerickDetector:
             return min(syllableCountList)
 
         return 1
+    def getIndexOfFirstConsonant(self, word):
+        for i in range(0, len(word)):
+            if self.isDigit(word[i][-1]):
+                return i
+
+        return -1
+    #returns true if second is a subset of first
+    def isSubset(self, first, second):
+        if(len(second) > len(first)):
+            return False
+        if(second == first[(len(first) - len(second)):]):
+            return True
+        return False
+
+    def isRhymingCheck(self, firstWord, secondWord):
+        """
+        Returns True if two words (represented as lower-case strings) rhyme,
+        False otherwise.
+        """
+
+        if(len(firstWord) != len(secondWord)):
+            if(len(firstWord) > len(secondWord)):
+                secondWordConsonantIndex = self.getIndexOfFirstConsonant(secondWord)
+                if(secondWordConsonantIndex != -1 ):
+                    isRhyming = self.isSubset(firstWord, secondWord[secondWordConsonantIndex : ])
+
+            else:
+                i = self.getIndexOfFirstConsonant(firstWord)
+                if(i != -1 ):
+                    isRhyming = self.isSubset(secondWord, firstWord[i : ])
+        else:
+            firstWordConsonantIndex = self.getIndexOfFirstConsonant(firstWord)
+            secondWordConsonantIndex = self.getIndexOfFirstConsonant(secondWord)
+
+            if(firstWordConsonantIndex != -1 and secondWordConsonantIndex != -1):
+                isRhyming = self.isSubset(secondWord[secondWordConsonantIndex : ], firstWord[firstWordConsonantIndex : ])
+
+        return isRhyming
 
     def rhymes(self, a, b):
         """
         Returns True if two words (represented as lower-case strings) rhyme,
         False otherwise.
         """
+        #if lengths dont match
+        isRhyming = False
+        if not {a, b} <= set(self._pronunciations):
+           return False
 
-        # TODO: provide an implementation!
+        firstWord = self._pronunciations[a]
+        secondWord = self._pronunciations[b]
 
+        for i in firstWord:
+            for j in secondWord:
+                isRhyming = self.isRhymingCheck(i, j) or isRhyming
+        return isRhyming
+    def isPunctuation(self, char):
+        if char in [',', '.', '!']:
+            return True
         return False
+    def clean(self, line):
+        print(line)
+        if self.isPunctuation(line[-1]):
+            line.pop(len(line)-1)
+        for i in range(0, len(line)):
+            if len(line[i])==0 and self.isPunctuation(line[i]):
+                line.pop(len(line)-1)
+        print(line)
+        return line
 
     def is_limerick(self, text):
         """
@@ -111,8 +174,29 @@ class LimerickDetector:
         (English professors may disagree with this definition, but that's what
         we're using here.)
 
-
         """
+        A_LINES = [0,1,4]
+        lines = re.split("\n", text)
+        print(lines)
+
+        linesTokenised = []
+        for line in lines:
+            line = line.strip()
+            if(len(line) > 0):
+                tokenisedLines = nltk.tokenize.word_tokenize(line)
+                print(tokenisedLines,line)
+                tokenisedLines = map(lambda x : self.clean(x), [tokenisedLines])
+                linesTokenised.append(tokenisedLines)
+
+        print(linesTokenised)
+        if(len(linesTokenised) < 5):
+            return False
+        if not (self.rhymes(lines[0][-1], lines[1][-1]) and self.rhymes(lines[1][-1], lines[2][-1]) and self.rhymes(lines[0][-1], lines[4][-1])):
+            return False
+
+
+
+
         # TODO: provide an implementation!
         return False
 
@@ -142,3 +226,4 @@ def main():
 
 if __name__ == '__main__':
   main()
+
