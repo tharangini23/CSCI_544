@@ -67,6 +67,27 @@ class LimerickDetector:
                 results.append(word)
         return results
 
+    def guess_syllables(self, word):
+        vowels = ['a', 'e', 'i', 'o', 'u', 'y']
+        count = 0
+        prev = False
+        first_found = False
+        for char in word:
+
+            if char in vowels and prev==False:
+                count += 1
+                first_found = True
+                prev = True
+            else:
+                if first_found :
+                    prev = False
+        if prev == True and count >= 2:
+            return count -1
+        return count
+
+
+
+
     #return 1 if consonant
     def isConsonant(self, char):
         if char in self.digits:
@@ -76,7 +97,7 @@ class LimerickDetector:
         if char in self.digits:
             return 1
         return 0
-    def num_syllables(self, word):
+    def num_syllables1(self, word):
         """
         Returns the number of syllables in a word.  If there's more than one
         pronunciation, take the shorter one.  If there is no entry in the
