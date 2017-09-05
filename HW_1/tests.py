@@ -6,11 +6,6 @@ class TestSequenceFunctions(unittest.TestCase):
     def setUp(self):
         self.ld = LimerickDetector()
 
-    def test_getIndex(self):
-        print(self.ld.getIndexOfFirstConsonant("dog"))
-
-    def test_rhyme2(self):
-        print(self.ld.rhymes("die", "aye"))
 
     def test_rhyme(self):
         s = []
@@ -85,7 +80,7 @@ saw a man come can't along.
 and unless we are wrong
 you expected this line to be lewd
         """
-        self.ld.is_limerick(a)
+        print(self.ld.is_limerick(a))
 
     def test_examples(self):
 

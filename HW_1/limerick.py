@@ -85,7 +85,7 @@ class LimerickDetector:
             return min(syllableCountList)
 
         return 1
-    def getIndexOfFirstConsonant(self, word):
+    def getIndexOfFirstVowel(self, word):
         for i in range(0, len(word)):
             if self.isDigit(word[i][-1]):
                 return i
@@ -107,24 +107,25 @@ class LimerickDetector:
 
         if(len(firstWord) != len(secondWord)):
             if(len(firstWord) > len(secondWord)):
-                secondWordConsonantIndex = self.getIndexOfFirstConsonant(secondWord)
-                if(secondWordConsonantIndex != -1 ):
-                    isRhyming = self.isSubset(firstWord, secondWord[secondWordConsonantIndex : ])
+                secondWordVowelIndex = self.getIndexOfFirstVowel(secondWord)
+                if(secondWordVowelIndex != -1 ):
+                    isRhyming = self.isSubset(firstWord, secondWord[secondWordVowelIndex : ])
 
             else:
-                i = self.getIndexOfFirstConsonant(firstWord)
-                if(i != -1 ):
-                    isRhyming = self.isSubset(secondWord, firstWord[i : ])
+                firstWordVowelIndex = self.getIndexOfFirstVowel(firstWord)
+                if(firstWordVowelIndex != -1 ):
+                    isRhyming = self.isSubset(secondWord, firstWord[firstWordVowelIndex : ])
         else:
-            firstWordConsonantIndex = self.getIndexOfFirstConsonant(firstWord)
-            secondWordConsonantIndex = self.getIndexOfFirstConsonant(secondWord)
+            firstWordVowelIndex = self.getIndexOfFirstVowel(firstWord)
+            secondWordVowelIndex = self.getIndexOfFirstVowel(secondWord)
 
-            if(firstWordConsonantIndex != -1 and secondWordConsonantIndex != -1):
-                isRhyming = self.isSubset(secondWord[secondWordConsonantIndex : ], firstWord[firstWordConsonantIndex : ])
+            if(firstWordVowelIndex != -1 and secondWordVowelIndex != -1):
+                isRhyming = self.isSubset(secondWord[secondWordVowelIndex : ], firstWord[firstWordVowelIndex : ])
 
         return isRhyming
 
     def rhymes(self, a, b):
+
         """
         Returns True if two words (represented as lower-case strings) rhyme,
         False otherwise.
@@ -146,14 +147,18 @@ class LimerickDetector:
             return True
         return False
     def clean(self, line):
-        print(line)
         if self.isPunctuation(line[-1]):
             line.pop(len(line)-1)
         for i in range(0, len(line)):
             if len(line[i])==0 and self.isPunctuation(line[i]):
                 line.pop(len(line)-1)
-        print(line)
         return line
+    def getNumberOfSyllablesInLine(self, line):
+        count = 0
+        for i in line:
+            count += self.num_syllables(i)
+        return count
+
 
     def is_limerick(self, text):
         """
@@ -177,22 +182,37 @@ class LimerickDetector:
         """
         A_LINES = [0,1,4]
         lines = re.split("\n", text)
-        print(lines)
 
         linesTokenised = []
         for line in lines:
             line = line.strip()
             if(len(line) > 0):
                 tokenisedLines = nltk.tokenize.word_tokenize(line)
-                print(tokenisedLines,line)
                 tokenisedLines = map(lambda x : self.clean(x), [tokenisedLines])
-                linesTokenised.append(tokenisedLines)
+                linesTokenised += (tokenisedLines)
 
-        print(linesTokenised)
+        numSyllablesInLine = []
         if(len(linesTokenised) < 5):
             return False
-        if not (self.rhymes(lines[0][-1], lines[1][-1]) and self.rhymes(lines[1][-1], lines[2][-1]) and self.rhymes(lines[0][-1], lines[4][-1])):
+        if not (self.rhymes(linesTokenised[0][-1], linesTokenised[1][-1]) and self.rhymes(linesTokenised[1][-1], linesTokenised[4][-1])):
             return False
+        for i in linesTokenised:
+            numSyllablesInLine.append(self.getNumberOfSyllablesInLine(i))
+        for i in numSyllablesInLine:
+            if i < 4:
+                return False
+        if(abs(numSyllablesInLine[0] - numSyllablesInLine[1])>2 or abs(numSyllablesInLine[1] - numSyllablesInLine[4])>2 or abs(numSyllablesInLine[0] - numSyllablesInLine[4])>2):
+            return False
+        if(abs(numSyllablesInLine[2] - numSyllablesInLine[3])>2 ):
+            return False
+        if(numSyllablesInLine[2] > numSyllablesInLine[0] or numSyllablesInLine[2] > numSyllablesInLine[1] or numSyllablesInLine[2] > numSyllablesInLine[4]):
+            return False
+        if(numSyllablesInLine[3] > numSyllablesInLine[0] or numSyllablesInLine[3] > numSyllablesInLine[1] or numSyllablesInLine[3] > numSyllablesInLine[4]):
+            return False
+        return True
+
+
+
 
 
 
