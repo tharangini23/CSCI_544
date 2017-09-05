@@ -55,6 +55,18 @@ class LimerickDetector:
         """
         self._pronunciations = nltk.corpus.cmudict.dict()
         self.digits = [str(i) for i in range(0,10)]
+
+    def apostrophe_tokenize(self, line):
+        words = re.split("\s+", line)
+        results = []
+        for word in words:
+            match = re.match("([a-z]+)([,.])", word)
+            if(match):
+                results+= match.groups()
+            else:
+                results.append(word)
+        return results
+
     #return 1 if consonant
     def isConsonant(self, char):
         if char in self.digits:
