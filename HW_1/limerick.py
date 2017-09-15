@@ -57,17 +57,26 @@ class LimerickDetector:
         self.digits = [str(i) for i in range(0,10)]
 
     def apostrophe_tokenize(self, line):
+        line = line.strip()
         words = re.split("\s+", line)
         results = []
         for word in words:
-            match = re.match("([a-z]+)([,.])", word)
-            if(match):
-                results+= match.groups()
+            begin_end_match = re.match("([.,:;!\"])([A-Za-z\']+)([,.:;!])", word)
+            end_match = re.match("([A-Za-z\']+)([,.:;!])", word)
+            begin_match = re.match('([,.:;\"])([A-Za-z\']+)', word)
+            if begin_end_match:
+                results+= begin_end_match.groups()
+            elif end_match:
+                results+= end_match.groups()
+            elif begin_match:
+                results+= begin_match.groups()
+
             else:
                 results.append(word)
         return results
 
     def guess_syllables(self, word):
+        word = word.lower()
         vowels = ['a', 'e', 'i', 'o', 'u', 'y']
         count = 0
         prev = False
@@ -81,12 +90,12 @@ class LimerickDetector:
             else:
                 if first_found :
                     prev = False
-        if prev == True and count >= 2:
-            return count -1
+        if prev == True and len(word)>2 and re.match("[aeiouy][^aeiouy][aeiouy]", word[-3:]):
+
+           return count -1
+        if count==0:
+            return 1
         return count
-
-
-
 
     #return 1 if consonant
     def isConsonant(self, char):
@@ -97,7 +106,7 @@ class LimerickDetector:
         if char in self.digits:
             return 1
         return 0
-    def num_syllables1(self, word):
+    def num_syllables(self, word):
         """
         Returns the number of syllables in a word.  If there's more than one
         pronunciation, take the shorter one.  If there is no entry in the
@@ -175,17 +184,18 @@ class LimerickDetector:
             for j in secondWord:
                 isRhyming = self.isRhymingCheck(i, j) or isRhyming
         return isRhyming
+
     def isPunctuation(self, char):
-        if char in [',', '.', '!']:
+        if char in [',', '.', '!',":", ";", "''", '\"']:
             return True
         return False
     def clean(self, line):
-        if self.isPunctuation(line[-1]):
-            line.pop(len(line)-1)
+        cleanLine = []
         for i in range(0, len(line)):
-            if len(line[i])==0 and self.isPunctuation(line[i]):
-                line.pop(len(line)-1)
-        return line
+            if not (len(line[i]) ==1 and self.isPunctuation(line[i])):
+                cleanLine.append(line[i])
+
+        return cleanLine
     def getNumberOfSyllablesInLine(self, line):
         count = 0
         for i in line:
@@ -229,8 +239,14 @@ class LimerickDetector:
             return False
         if not (self.rhymes(linesTokenised[0][-1], linesTokenised[1][-1]) and self.rhymes(linesTokenised[1][-1], linesTokenised[4][-1])):
             return False
+        if not (self.rhymes(linesTokenised[2][-1], linesTokenised[3][-1])):
+            return False
+        if  (self.rhymes(linesTokenised[0][-1], linesTokenised[2][-1])):
+            return False
+
         for i in linesTokenised:
             numSyllablesInLine.append(self.getNumberOfSyllablesInLine(i))
+        print(numSyllablesInLine)
         for i in numSyllablesInLine:
             if i < 4:
                 return False
@@ -238,9 +254,9 @@ class LimerickDetector:
             return False
         if(abs(numSyllablesInLine[2] - numSyllablesInLine[3])>2 ):
             return False
-        if(numSyllablesInLine[2] > numSyllablesInLine[0] or numSyllablesInLine[2] > numSyllablesInLine[1] or numSyllablesInLine[2] > numSyllablesInLine[4]):
+        if(numSyllablesInLine[2] >= min(numSyllablesInLine[0], numSyllablesInLine[1], numSyllablesInLine[4])):
             return False
-        if(numSyllablesInLine[3] > numSyllablesInLine[0] or numSyllablesInLine[3] > numSyllablesInLine[1] or numSyllablesInLine[3] > numSyllablesInLine[4]):
+        if(numSyllablesInLine[3] >= min(numSyllablesInLine[0], numSyllablesInLine[1], numSyllablesInLine[4])):
             return False
         return True
 
@@ -251,7 +267,7 @@ class LimerickDetector:
 
 
         # TODO: provide an implementation!
-        return False
+        #return False
 
 
 # The code below should not need to be modified
