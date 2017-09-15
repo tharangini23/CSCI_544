@@ -21,7 +21,7 @@ def iterateRules():
     #      "lilac+ing" -> "lilacking" (here '_' is an a)
     # if you need help with python regular expressions, see:
     #   http://docs.python.org/library/re.html
-
+    yield ("(.*)c\+(.+)", "\\1ck\\2")
 def generate(analysis):
     word = analysis
     # apply all rules in sequence
