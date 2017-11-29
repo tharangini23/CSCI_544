@@ -4,6 +4,7 @@ import time
 import math
 import sys, fileinput
 import matplotlib.pyplot as plt
+#from pylab import *
 
 def parseFromTable(start, end,  root, back):
 
@@ -69,29 +70,33 @@ def buildChart(words, grammer, NON_TERMINALS):
                     if ",".join(rule) in grammer:
                         prob = score[begin][split][rule[1]]*score[split][end][rule[2]]*grammer[",".join(rule)]
                         all_rules =score[begin][end]
+                        # rule[0], prob , rule[1], rule[2]
                         if rule[0] in all_rules:
+                            #print "o",all_rules
                             if prob > all_rules[rule[0]]:
                                 all_rules[rule[0]]=prob
                                 score[begin][end] = all_rules
                                 back[begin][end][rule[0]] = [split ,rule[1],rule[2]]
                         else:
+                            #print "r",all_rules
                             all_rules[rule[0]]=prob
                             score[begin][end] = all_rules
                             back[begin][end][rule[0]] = [split ,rule[1],rule[2]]
 
 
-    #for i in score:
+    # for i in score:
+    #      print i
+    # for i in back:
     #     print i
     output = ""
     if len(back[0][len(back[0])-1].keys())==0:
         output=""
     else:
         output =  parseFromTable(0, len(back[0])-1, "TOP",back)
-
+    #print math.log10(score[0][len(back[0])-1]["TOP"])
     return output
 def drawPlot(parseingTime, sentenceLength):
-    plt.subplot(221)
-    plt.plot(sentenceLength, parseingTime, 'ro')
+    plt.plot(sentenceLength, parseingTime, 'ro' )
     plt.yscale('log')
     plt.xscale('log')
     plt.xlabel('Sentence Length')
@@ -100,21 +105,41 @@ def drawPlot(parseingTime, sentenceLength):
     plt.show()
 
 
+
 def getRulesInTheTree(tree, ruleCount, pblityCountHelper, TERMINALS, treeString):
     treeNodeQueue = []
     treeNodeQueue.append(tree.root)
     while len(treeNodeQueue) > 0:
         lhs = treeNodeQueue.pop()
         rule = [str(lhs)]
-        children = lhs.children
 
-        for r in children:
-            rule.append(str(r))
-            if len(r.children)>0:
-                treeNodeQueue.append(r)
+        children = lhs.children
+        # print(len(children), str(children[0]), len(children[0].children))
+        # if len(children)==1:
+        #     rule.append(str(r))#.lower())#l
+        #
+        # else:
+        #     for r in children:
+        #         rule.append(str(r))
+        #         if len(r.children)>0:
+        #             treeNodeQueue.append(r)
+
+
+        #print(len(children), str(children[0]), len(children[0].children))
+        if len(children) >1:
+            for r in children:
+                rule.append(str(r))
+                if len(r.children)>0:
+                    treeNodeQueue.append(r)
+        else:
+            for r in children:
+                rule.append(str(r))#.lower())
+                if len(r.children)>0:
+                    treeNodeQueue.append(r)
+
         rule_key = ",".join(rule)
         if len(children) == 1:
-            TERMINALS.add(str(children[0]))
+            TERMINALS.add(str(children[0]))#.lower())
 
         #store count of rules
         if rule_key not in ruleCount:
@@ -127,13 +152,10 @@ def getRulesInTheTree(tree, ruleCount, pblityCountHelper, TERMINALS, treeString)
         allRhs = pblityCountHelper[str(lhs)]
         allRhs[rule_key] = allRhs.get(rule_key,0) + 1
         pblityCountHelper[str(lhs)] = allRhs
-
 def writeToFile(str, fileName):
     f = open(fileName, 'w')
     f.write(str)
-
-
-def readTreesAndGetRules(inputTestFile):
+def readTreesAndGetRules():
     #key ="A,B,C" value = count
     ruleCount = {}
     #key ="A" value = [["A,B,C",3],["A,milk",1]]
@@ -170,12 +192,16 @@ def readTreesAndGetRules(inputTestFile):
         #print ruleString
     writeToFile(ruleString, "rules" )
 
-    words = ["What is <unk> I A ?"]
+    words = ["Which is last ?"]
     output = ""
-    for sentence in open(inputTestFile,"r"):
+    for sentence in open("dev.strings","r"):
     #for sentence in words:
-        s = sentence.strip().split(" ")
+        #sentence = sentence.lower()
+
         sentence = sentence.strip().split(" ")
+        # for i in sentence:
+        #     if i[::-1][0]=='s' and i[::-1][1]!='s':
+        #         i = i[:-1]
 
         for i in range(0, len(sentence)):
             if sentence[i] not in TERMINALS :
@@ -185,14 +211,17 @@ def readTreesAndGetRules(inputTestFile):
         #print i, sentence
         startTime = time.time()
         parsedTree = buildChart(sentence, pblityCount, NON_TERMINALS)
+        #print parsedTree
         output += parsedTree
         output += "\n"
         endTime = time.time()
         if len(parsedTree)>0:
             parseingTime.append(endTime - startTime )
-            sentenceLength.append(len(s))
+            sentenceLength.append(len(sentence))
     #print output
-    #drawPlot(parseingTime, sentenceLength)
+    print parseingTime
+    print sentenceLength
+    drawPlot(parseingTime, sentenceLength)
     return output
 
 """
@@ -221,11 +250,9 @@ def readTreesAndGetRules(inputTestFile):
 
 def main():
     args = sys.argv
-    output = readTreesAndGetRules(args[1])
+    output = readTreesAndGetRules()
+    writeToFile(output, "modification1_op")
     print output
-
-
-
 
 if __name__ == '__main__':
   main()
